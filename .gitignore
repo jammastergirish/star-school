@@ -1,0 +1,6 @@
+.env
+.voice-cache/
+ios/build/
+ios/*.xcodeproj/
+.DS_Store
+.ruff_cache/

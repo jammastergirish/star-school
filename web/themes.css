@@ -1,0 +1,27 @@
+/* Extra floater kinds and scene animations used by themes.js (Rain and Holi). */
+.float.drop {
+  border-radius: 50% 50% 50% 50% / 70% 70% 35% 35%;
+  background: linear-gradient(180deg, rgba(200, 232, 255, 0), rgba(200, 232, 255, 0.85));
+  animation-name: drop;
+}
+.float.powder {
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff4fae, rgba(255, 79, 174, 0) 72%);
+}
+.float.powder:nth-of-type(4n + 1) { background: radial-gradient(circle, #ffd93b, rgba(255, 217, 59, 0) 72%); }
+.float.powder:nth-of-type(4n + 2) { background: radial-gradient(circle, #3fe58a, rgba(63, 229, 138, 0) 72%); }
+.float.powder:nth-of-type(4n + 3) { background: radial-gradient(circle, #38ccff, rgba(56, 204, 255, 0) 72%); }
+.scene-art .ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ripple 4s ease-out infinite;
+}
+/* Each cycle holds four falls, so rain stays quick with the engine's slow 5-14s durations. */
+@keyframes drop {
+  0%, 25.01%, 50.01%, 75.01% { transform: translateY(-105vh) scaleX(0.3); }
+  25%, 50%, 75%, 100% { transform: translateY(105vh) scaleX(0.3); }
+}
+@keyframes ripple {
+  from { transform: scale(0.3); opacity: 0.9; }
+  to { transform: scale(1.1); opacity: 0; }
+}

@@ -1,0 +1,2086 @@
+<title>Star School</title>
+<meta charset="utf-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+/>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="stylesheet" href="fonts.css" />
+<link rel="stylesheet" href="games.css" />
+<link rel="stylesheet" href="themes.css" />
+<style>
+  /* Layout: one full-screen scene with the game floating on it, and no scrolling while playing.
+     The colours are set by the theme engine from themes.js; these are its starting values. */
+  :root {
+    color-scheme: dark;
+    --bg: #03040c;
+    --glow: #ffd166;
+    --halo: rgba(255, 209, 102, 0.45);
+    --ink: #4cc9f0;
+    --mint: #80ffdb;
+    --moon: #f5f7ff;
+    --dim: #a4afd4;
+    --ghost: #2c3667;
+    --key: #060916;
+    --key-edge: #46528c;
+    --card: rgba(14, 20, 50, 0.72);
+    --round: "Baloo 2", "Baloo Bhaijaan 2", ui-rounded, "Kohinoor Devanagari", "Geeza Pro", "Arial Rounded MT Bold", sans-serif;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    touch-action: manipulation;
+  }
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+  body {
+    background: var(--bg);
+    background-color: #03040c;
+    color: var(--moon);
+    font-family: var(--round);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  button:focus-visible,
+  input:focus-visible,
+  summary:focus-visible {
+    outline: 4px solid var(--mint);
+    outline-offset: 3px;
+  }
+
+  /* Scene */
+  #scene {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  body.playing #scene {
+    opacity: 0.4;
+  }
+  .scene-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  #home,
+  #game,
+  #settings {
+    position: relative;
+    z-index: 1;
+  }
+  .scene-art .sway {
+    animation: sway 6s ease-in-out infinite alternate;
+  }
+  .scene-art .bob {
+    animation: bob 5s ease-in-out infinite alternate;
+  }
+  .scene-art .bob.slow {
+    animation-duration: 8s;
+  }
+  .scene-art .swim {
+    animation: swim 14s ease-in-out infinite alternate;
+  }
+  .scene-art .swim.slow {
+    animation-duration: 22s;
+  }
+  .scene-art .flicker {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: flicker 1.1s ease-in-out infinite alternate;
+  }
+  .float {
+    position: absolute;
+    display: block;
+    animation: rise linear infinite;
+  }
+  .float.bubble {
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    background: radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.55), transparent 45%);
+  }
+  .float.ember {
+    border-radius: 50%;
+    transform: scale(0.45);
+    background: radial-gradient(circle, #fff1b8, #ff9f1c 55%, transparent 72%);
+  }
+  .float.sparkle,
+  .float.twinkle {
+    background: #fff;
+    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+    animation-name: twinkle;
+    animation-timing-function: ease-in-out;
+    animation-direction: alternate;
+  }
+  .float.sparkle {
+    background: #fff4c2;
+  }
+
+  /* Home */
+  #home {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 3vh;
+    padding-block: 7vh 2vh;
+  }
+  h1 {
+    margin: auto 0 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    font-size: clamp(40px, 8.6vh, 84px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--glow);
+    text-shadow: 0 0 34px var(--halo), 0 3px 0 rgba(0, 0, 0, 0.25);
+  }
+  h1 .mascot {
+    font-size: 0.82em;
+    text-shadow: none;
+  }
+  .modes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(12px, 2.4vw, 26px);
+    width: 100%;
+  }
+  .mode {
+    flex: 0 1 calc((100% - 4 * clamp(12px, 2.4vw, 26px)) / 5);
+    max-width: 220px;
+    min-height: 21vh;
+    min-width: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--card);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 3px solid var(--key-edge);
+    border-radius: 34px;
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0.28);
+    font-size: clamp(15px, 2.5vh, 22px);
+    font-weight: 600;
+    line-height: 1.15;
+    transition:
+      transform 0.14s,
+      box-shadow 0.14s,
+      border-color 0.14s;
+  }
+  .mode:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 0 rgba(0, 0, 0, 0.24);
+    border-color: var(--glow);
+  }
+  .mode:active {
+    transform: translateY(6px);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+  }
+  .mode b {
+    font-size: clamp(38px, 8.4vh, 76px);
+    line-height: 1.15;
+    font-weight: 400;
+  }
+  .mode .big-a {
+    font-weight: 800;
+    color: var(--glow);
+    text-shadow: 0 0 26px var(--halo);
+  }
+  .shelf {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 4px 18px;
+    font-size: clamp(26px, 4.6vh, 40px);
+    line-height: 1.3;
+    max-width: 900px;
+    background: var(--card);
+    border-radius: 999px;
+  }
+  .link {
+    margin-bottom: auto;
+    padding: 8px 18px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--moon);
+    background: var(--card);
+    border: 2px solid var(--key-edge);
+    border-radius: 999px;
+  }
+
+  /* Settings */
+  #settings {
+    height: 100%;
+    overflow-y: auto;
+    padding-block: 18px 40px;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: min(760px, 100%);
+    margin-inline: auto;
+  }
+  .sheet header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .sheet h2 {
+    margin: 0;
+    font-size: clamp(28px, 5vh, 40px);
+    font-weight: 800;
+    color: var(--glow);
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 20px 20px;
+    background: var(--card);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 2px solid var(--key-edge);
+    border-radius: 24px;
+  }
+  .group h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .group p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.35;
+    color: var(--dim);
+  }
+  .group input {
+    width: min(320px, 100%);
+    padding: 10px 16px;
+    font: inherit;
+    font-size: 20px;
+    color: var(--moon);
+    background: var(--key);
+    border: 2px solid var(--key-edge);
+    border-radius: 14px;
+  }
+  .group .levels {
+    justify-content: flex-start;
+  }
+  .themes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .theme {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    max-width: 100%;
+    border: 3px solid var(--key-edge);
+    border-radius: 20px;
+    transition: transform 0.12s;
+  }
+  .theme:hover {
+    transform: translateY(-3px);
+  }
+  .theme.on {
+    border-color: var(--glow);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+  .theme span {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    padding: 1px 12px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 999px;
+  }
+
+  @media (max-aspect-ratio: 1/1) {
+    .mode {
+      flex-basis: calc((100% - 2 * clamp(12px, 2.4vw, 26px)) / 3);
+      max-width: 240px;
+    }
+    .mode {
+      min-height: 12.5vh;
+    }
+  }
+
+  /* Game frame */
+  #game {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    padding-block: 12px;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .round {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+    border-radius: 50%;
+    flex: none;
+    background: var(--card);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 3px solid var(--key-edge);
+  }
+  .round:hover {
+    border-color: var(--glow);
+  }
+  .round.ghosted {
+    visibility: hidden;
+  }
+  #stars {
+    display: flex;
+    gap: 6px;
+    font-size: clamp(26px, min(6vh, 8vw), 50px);
+    line-height: 1;
+    color: var(--ghost);
+  }
+  #stars .lit {
+    color: var(--glow);
+    text-shadow: 0 0 18px var(--halo);
+    animation: pop 0.4s;
+  }
+
+  #stage {
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4vw;
+  }
+  #stage.tracing {
+    cursor: none;
+    touch-action: none;
+  }
+  .letter {
+    font-size: min(44vh, 58vw);
+    line-height: 1;
+    font-weight: 700;
+    color: var(--glow);
+    cursor: pointer;
+    text-shadow: 0 0 60px var(--halo);
+  }
+  .pic {
+    font-size: min(26vh, 24vw);
+    line-height: 1;
+    visibility: hidden;
+  }
+  .pic.show {
+    visibility: visible;
+    animation: pop 0.5s;
+  }
+  .wordbox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2vh;
+  }
+  .wordpic {
+    font-size: min(24vh, 30vw);
+    line-height: 1;
+    cursor: pointer;
+  }
+  .slots {
+    display: flex;
+    gap: 1.5vw;
+  }
+  .slot {
+    font-size: min(17vh, 17vw);
+    line-height: 1.1;
+    font-weight: 700;
+    color: var(--ghost);
+    border-bottom: 8px solid transparent;
+    padding-inline: 0.06em;
+    min-width: 0.8em;
+    text-align: center;
+  }
+  .slot.now {
+    color: var(--moon);
+    border-bottom-color: var(--glow);
+  }
+  .slot.done {
+    color: var(--glow);
+  }
+
+  /* Keyboard, drawn like a MacBook's so she can match it to the real one */
+  #keys {
+    --k: min(calc((100vw - 32px - 72px) / 10.8), 9.2vh);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-top: 8px;
+  }
+  .row {
+    display: flex;
+    gap: 6px;
+    width: calc(var(--k) * 10.8 + 54px);
+  }
+  #keys.grid {
+    --k: min(calc((100vw - 32px - 72px) / 10.8), 7.6vh);
+  }
+  #keys.grid .row {
+    width: auto;
+    justify-content: center;
+    padding-left: 0;
+  }
+  .wordbox:has(.wordtext) {
+    gap: 0.5vh;
+  }
+  .wordbox:has(.wordtext) .wordpic {
+    font-size: min(15vh, 24vw);
+  }
+  .wordbox:has(.wordtext) .slot {
+    font-size: min(11vh, 14vw);
+  }
+  .wordtext {
+    font-size: min(10vh, 12vw);
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--moon);
+  }
+  .numeral small {
+    display: block;
+    font-size: 0.3em;
+    text-align: center;
+    color: var(--mint);
+  }
+  #paint {
+    width: min(62vh, 66vw);
+    height: min(62vh, 66vw);
+    touch-action: none;
+  }
+  .row:nth-child(2) {
+    padding-left: calc(var(--k) * 0.3);
+  }
+  .row:nth-child(3) {
+    padding-left: calc(var(--k) * 0.85);
+  }
+  .key {
+    box-shadow: 0 3px 0 var(--key-edge);
+    touch-action: none;
+    width: var(--k);
+    height: var(--k);
+    flex: none;
+    padding: 0;
+    border-radius: 16%;
+    display: grid;
+    place-items: center;
+    font-size: calc(var(--k) * 0.52);
+    font-weight: 700;
+    background: var(--key);
+    color: var(--moon);
+    border: 2px solid var(--key-edge);
+    cursor: default;
+  }
+  .key.hint {
+    background: var(--glow);
+    color: var(--key);
+    border-color: var(--moon);
+    animation: throb 1s infinite;
+  }
+  .key.good {
+    background: var(--mint);
+    color: var(--key);
+  }
+  .key.nope {
+    animation: wiggle 0.3s;
+  }
+
+  /* Tracing */
+  #trace {
+    width: min(68vh, 66vw);
+    height: min(68vh, 66vw);
+    max-width: 100%;
+    overflow: visible;
+    touch-action: none;
+  }
+  #trace path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  #trace .bed {
+    stroke: var(--ghost);
+    stroke-width: 15;
+  }
+  #trace .ink {
+    stroke: var(--ink);
+    stroke-width: 11;
+  }
+  #trace .demo {
+    stroke: var(--moon);
+    stroke-width: 4;
+  }
+  #trace text {
+    font-size: 15px;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  #guide text {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: throb 1s infinite;
+  }
+  #crayon {
+    position: fixed;
+    width: 34px;
+    height: 34px;
+    margin: -17px 0 0 -17px;
+    border-radius: 50%;
+    background: var(--mint);
+    border: 5px solid var(--moon);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Sticker reward */
+  #prize {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--key) 88%, transparent);
+  }
+  #prize .sticker {
+    font-size: min(52vh, 62vw);
+    line-height: 1;
+    animation: land 0.7s cubic-bezier(0.2, 1.5, 0.4, 1);
+  }
+  .bit {
+    position: absolute;
+    top: -60px;
+    font-size: 38px;
+    animation: fall linear forwards;
+  }
+
+  /* Numbers */
+  #stage.numbers {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1.2vh;
+  }
+  .levels {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .chip {
+    padding: 7px 18px;
+    font-weight: 600;
+    transition: transform 0.12s;
+    font-size: clamp(15px, 2.6vh, 20px);
+    background: var(--key);
+    border: 2px solid var(--key-edge);
+    border-radius: 999px;
+  }
+  .chip.on {
+    background: var(--glow);
+    color: var(--key);
+    border-color: var(--moon);
+  }
+  .play {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    container-type: size;
+    align-items: center;
+    justify-content: center;
+    gap: 2vh 4vw;
+  }
+  .numeral {
+    font-size: min(62cqh, 22cqw);
+    line-height: 1;
+    font-weight: 700;
+    color: var(--glow);
+    cursor: pointer;
+    text-shadow: 0 0 50px var(--halo);
+    font-variant-numeric: tabular-nums;
+  }
+  .qtybox .qty {
+    --c: min(calc((72cqh - 34px) / 10), 4cqw);
+  }
+  .qtybox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1vh;
+  }
+  .sofar {
+    font-size: clamp(22px, 5vh, 44px);
+    font-weight: 700;
+    color: var(--mint);
+    font-variant-numeric: tabular-nums;
+  }
+  .qty {
+    --c: min(calc((86cqh - 34px) / 10), 4cqw);
+    display: flex;
+    align-items: flex-end;
+    gap: calc(var(--c) * 0.3);
+  }
+  .rod,
+  .frame {
+    padding: 2px;
+    gap: 2px;
+    background: var(--key);
+    border: 2px solid var(--key-edge);
+    border-radius: 10px;
+  }
+  .rod {
+    display: flex;
+    flex-direction: column;
+  }
+  .frame {
+    display: grid;
+    grid-template-columns: repeat(5, var(--c));
+    margin-left: calc(var(--c) * 0.3);
+  }
+  .cell {
+    width: var(--c);
+    height: var(--c);
+    display: grid;
+    place-items: center;
+    font-size: calc(var(--c) * 0.8);
+    line-height: 1;
+  }
+  .cell.empty {
+    background: var(--ghost);
+    border-radius: 30%;
+    opacity: 0.45;
+  }
+  .pop {
+    animation: pop 0.3s;
+  }
+  #stage.numbers .slot {
+    font-size: min(42cqh, 14cqw);
+    cursor: pointer;
+  }
+  .numkeys {
+    --k: min(calc((100vw - 32px - 54px) / 10), 8.6vh);
+  }
+  .keyrow {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+  .numkeys .key {
+    width: var(--k);
+    height: var(--k);
+    font-size: calc(var(--k) * 0.52);
+  }
+  .numkeys .key.wide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    font-size: calc(var(--k) * 0.42);
+  }
+  .numkeys .key.space {
+    width: calc(var(--k) * 5);
+  }
+  .numkeys .key.return {
+    width: calc(var(--k) * 2.6);
+  }
+  .key small {
+    font-size: 0.65em;
+    font-weight: 400;
+  }
+  .chart {
+    display: grid;
+    --g: min(calc((100cqh - 30px) / 10), 7.4cqw);
+    grid-template-columns: repeat(10, var(--g));
+    gap: 3px;
+  }
+  .n {
+    height: var(--g);
+    display: grid;
+    place-items: center;
+    font-size: calc(var(--g) * 0.46);
+    font-weight: 700;
+    color: var(--dim);
+    background: var(--key);
+    border: 1px solid var(--key-edge);
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .n:nth-child(10n) {
+    border-color: var(--glow);
+  }
+  .n.on {
+    background: var(--mint);
+    color: var(--key);
+  }
+  .n.now {
+    background: var(--glow);
+  }
+  @keyframes sway {
+    from { transform: rotate(-4deg); }
+    to { transform: rotate(5deg); }
+  }
+  @keyframes bob {
+    from { transform: translateY(-8px); }
+    to { transform: translateY(10px); }
+  }
+  @keyframes swim {
+    from { transform: translateX(-46px); }
+    to { transform: translateX(60px); }
+  }
+  @keyframes flicker {
+    from { transform: scale(0.92, 1); opacity: 0.86; }
+    to { transform: scale(1.06, 1.1); opacity: 1; }
+  }
+  @keyframes rise {
+    from { transform: translateY(16vh); opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    to { transform: translateY(-34vh); opacity: 0; }
+  }
+  @keyframes twinkle {
+    from { transform: scale(0.35); opacity: 0.25; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.2);
+    }
+    70% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  @keyframes land {
+    0% {
+      transform: scale(0) rotate(-40deg);
+    }
+    100% {
+      transform: scale(1) rotate(0);
+    }
+  }
+  @keyframes throb {
+    50% {
+      transform: scale(1.14);
+    }
+  }
+  @keyframes wiggle {
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+  }
+  @keyframes fall {
+    to {
+      transform: translateY(115vh) rotate(420deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .float,
+    .scene-art * {
+      animation: none !important;
+    }
+    .key.hint,
+    #guide text {
+      animation: none;
+    }
+    .bit {
+      display: none;
+    }
+  }
+</style>
+
+<div id="scene"></div>
+
+<div id="home">
+  <h1><span class="mascot" id="mascot" aria-hidden="true"></span>Star School</h1>
+  <div class="modes" id="modes">
+    <button
+      class="mode"
+      id="go-letters"
+      aria-label="Find the letter on the keyboard"
+    >
+      <b class="big-a" id="first-letter">A</b><span id="label-letters">Find the key</span>
+    </button>
+    <button class="mode" id="go-trace" aria-label="Trace a letter">
+      <b id="trace-pic">⭐</b><span id="label-trace">Follow the star</span>
+    </button>
+    <button class="mode" id="go-words" aria-label="Type a word">
+      <b>🐱</b><span id="label-words">Type a word</span>
+    </button>
+    <button class="mode" id="go-count" aria-label="Count things">
+      <b class="big-a">123</b><span id="label-count">Count</span>
+    </button>
+  </div>
+  <div class="shelf" id="shelf" aria-label="Stickers"></div>
+  <button class="link" id="open-settings">⚙️ For grown-ups</button>
+</div>
+
+<div id="settings" hidden>
+  <div class="sheet">
+    <header>
+      <button class="round" id="close-settings" aria-label="Back to the game">🏠</button>
+      <h2>Settings</h2>
+    </header>
+    <section class="group">
+      <h3><label for="kid-name">Her name</label></h3>
+      <input id="kid-name" autocomplete="off" spellcheck="false" maxlength="14" />
+      <p>Her first name becomes her first word to type and her first letters to trace, in English, French and Spanish.</p>
+    </section>
+    <section class="group">
+      <h3>Game language</h3>
+      <p>The language the game speaks and shows.</p>
+      <div class="levels" id="langs"></div>
+    </section>
+    <section class="group">
+      <h3>Languages she's learning</h3>
+      <p>Tap to choose as many as you like. Shapes and colours, and Say it, use only these.</p>
+      <div class="levels" id="known"></div>
+    </section>
+    <section class="group">
+      <h3>Theme</h3>
+      <div class="themes" id="themes"></div>
+    </section>
+    <section class="group">
+      <h3>How to play</h3>
+      <div id="how-to"></div>
+    </section>
+    <section class="group" id="full-group">
+      <h3>Screen</h3>
+      <div class="levels"><button class="chip" id="full">Full screen</button></div>
+    </section>
+  </div>
+</div>
+
+<div id="game" hidden>
+  <div class="bar">
+    <button class="round" id="back" aria-label="Go home">🏠</button>
+    <div id="stars" aria-hidden="true"></div>
+    <button class="round" id="skip" aria-label="Next letter">➡️</button>
+  </div>
+  <div id="top-tools"><span class="lang-badge" id="lang-badge"></span></div>
+  <div id="stage"></div>
+  <div id="keys"></div>
+</div>
+<div id="crayon" hidden></div>
+<div id="prize" hidden></div>
+
+<script src="languages.js"></script>
+<script src="effects.js"></script>
+<script src="notes.js"></script>
+<script src="themes.js"></script>
+<script src="content.js"></script>
+<script src="lowercase.js"></script>
+<script src="games.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // Each letter is its strokes, in the order children are taught to write them, in a 100x100 box.
+  const STROKES = {
+    A: ["M50 10 L18 90", "M50 10 L82 90", "M30 60 L70 60"],
+    B: [
+      "M25 10 L25 90",
+      "M25 10 L55 10 C80 10 80 48 55 48 L25 48",
+      "M25 48 L60 48 C88 48 88 90 60 90 L25 90",
+    ],
+    C: ["M78 25 C65 5 20 5 18 50 C20 95 65 95 78 75"],
+    D: ["M25 10 L25 90", "M25 10 L45 10 C90 10 90 90 45 90 L25 90"],
+    E: ["M25 10 L25 90", "M25 10 L75 10", "M25 50 L65 50", "M25 90 L75 90"],
+    F: ["M25 10 L25 90", "M25 10 L75 10", "M25 50 L65 50"],
+    G: ["M78 25 C65 5 20 5 18 50 C20 95 70 95 78 65 L78 52 L52 52"],
+    H: ["M25 10 L25 90", "M75 10 L75 90", "M25 50 L75 50"],
+    I: ["M50 10 L50 90", "M30 10 L70 10", "M30 90 L70 90"],
+    J: ["M65 10 L65 68 C65 95 25 95 25 70"],
+    K: ["M28 10 L28 90", "M72 10 L28 52", "M28 52 L75 90"],
+    L: ["M28 10 L28 90 L75 90"],
+    M: ["M20 90 L20 10", "M20 10 L50 62 L80 10", "M80 10 L80 90"],
+    N: ["M22 90 L22 10", "M22 10 L78 90", "M78 90 L78 10"],
+    O: ["M50 10 C10 10 10 90 50 90 C90 90 90 10 50 10"],
+    P: ["M25 10 L25 90", "M25 10 L55 10 C85 10 85 52 55 52 L25 52"],
+    Q: ["M50 10 C10 10 10 90 50 90 C90 90 90 10 50 10", "M58 65 L82 90"],
+    R: [
+      "M25 10 L25 90",
+      "M25 10 L55 10 C85 10 85 52 55 52 L25 52",
+      "M48 52 L78 90",
+    ],
+    S: ["M76 24 C66 4 22 6 24 30 C26 52 76 46 76 70 C76 96 30 96 22 74"],
+    T: ["M50 10 L50 90", "M20 10 L80 10"],
+    U: ["M22 10 L22 60 C22 100 78 100 78 60 L78 10"],
+    V: ["M20 10 L50 90", "M50 90 L80 10"],
+    W: ["M12 10 L32 90", "M32 90 L50 30", "M50 30 L68 90", "M68 90 L88 10"],
+    X: ["M22 10 L78 90", "M78 10 L22 90"],
+    Y: ["M22 10 L50 50", "M78 10 L50 50", "M50 50 L50 90"],
+    Z: ["M22 10 L78 10 L22 90 L78 90"],
+  };
+  STROKES["Ñ"] = [...STROKES.N, "M32 0 C40 -8 52 6 68 -2"];
+  const TRACE_ORDER = "LTIHFEXVANKZMWYCOQGSUJDPBR".split("");
+  const REACH = 13; // how far from the line the pointer may stray, in letter-box units
+  const LOOKAHEAD = 20;
+
+  const memory = {}; // keeps the name and stickers for this visit when the browser blocks storage
+  const store = {
+    get(k, d) {
+      try {
+        const v = localStorage.getItem("letterstar." + k);
+        return v === null ? d : JSON.parse(v);
+      } catch {
+        return k in memory ? memory[k] : d;
+      }
+    },
+    set(k, v) {
+      memory[k] = v;
+      try {
+        localStorage.setItem("letterstar." + k, JSON.stringify(v));
+      } catch {}
+    },
+  };
+  const shuffle = (a) => {
+    a = [...a];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  let T = LANGS.en;
+  const lowerCase = () => T.latin && store.get("lower", false);
+  const shown = (L) => (lowerCase() ? L.toLowerCase() : L);
+  const traceKey = () => "traceAt." + T.code;
+  const nativeDigits = (n) =>
+    T.digits
+      ? "<small>" + [...String(n)].map((d) => T.digits[+d]).join("") + "</small>"
+      : "";
+  const kidName = () =>
+    store
+      .get("name", "")
+      .trim()
+      .split(/[\s-]/)[0] // first name only: a whole full name is too long for a four-year-old
+      .toUpperCase()
+      .replace(/[^A-Z]/g, "");
+  const herName = () => (T.latin ? kidName() : ""); // her name is in Latin letters, so other scripts skip it
+
+  // Voice: she can't read yet, so every instruction is spoken. Lines come from voice-<code>.js,
+  // recorded ahead of time, so the game never needs the network or an API key.
+  // Plain audio elements, not Web Audio: Lockdown Mode removes Web Audio on iPhone and iPad.
+  const voicePlayer = new Audio();
+  let sayId = 0,
+    stopClip = null;
+  function stopSay() {
+    sayId++;
+    stopClip?.();
+    stopClip = null;
+    window.speechSynthesis?.cancel();
+  }
+  function playClip(line, id, code) {
+    return new Promise((done) => {
+      if (id !== sayId) return done();
+      const finish = () => {
+        clearTimeout(cap);
+        voicePlayer.onended = voicePlayer.onerror = null;
+        done();
+      };
+      const cap = setTimeout(finish, 8000); // a clip that never ends must not stall the game
+      voicePlayer.onended = voicePlayer.onerror = finish;
+      stopClip = () => {
+        voicePlayer.pause();
+        finish();
+      };
+      voicePlayer.src = "data:audio/mpeg;base64," + voiceClip(line, code);
+      voicePlayer.play().catch(finish);
+    });
+  }
+  const voiceClip = (line, code = T.code) => window.VOICES?.[code]?.[line];
+  // Takes one line or a list of lines to play in order.
+  async function say(lines) {
+    stopSay();
+    if (pendingHow) {
+      lines = [pendingHow, { pause: 300 }].concat(lines);
+      pendingHow = null;
+    }
+    const id = sayId;
+    for (const item of [].concat(lines)) {
+      if (id !== sayId) return;
+      if (item.pause) {
+        await wait(item.pause);
+        continue;
+      }
+      const line = String(item.line ?? item);
+      if (voiceClip(line, item.lang)) await playClip(line, id, item.lang);
+      else console.warn("No clip for", line);
+    }
+  }
+
+  // Sound effects are MP3s too: Lockdown Mode refuses WAV files, and tools/make-voice.mjs makes these.
+  const effect = (name) =>
+    new Audio("data:audio/mpeg;base64," + window.EFFECTS[name]).play().catch(() => {});
+  const ding = () => effect("ding");
+  const boop = () => effect("boop");
+  const fanfare = () => effect("fanfare");
+  const cheer = () => effect("cheer");
+
+  // Screens. `round` changes whenever play stops, so unfinished async steps can tell they are stale.
+  let round = 0,
+    keyHandler = null,
+    stars = 0,
+    goal = 5,
+    onHome = true;
+  function showHome() {
+    document.querySelector("#game .help")?.remove();
+    leaveHook?.();
+    leaveHook = null;
+    rawKeyHandler = null;
+    document.querySelector(".case-toggle")?.remove();
+    $("settings").hidden = true;
+    document.body.classList.remove("playing");
+    round++;
+    onHome = true;
+    keyHandler = null;
+    stopSay();
+    $("game").hidden = true;
+    $("crayon").hidden = true;
+    $("prize").hidden = true;
+    $("home").hidden = false;
+    const got = store.get("stickers", []);
+    $("shelf").hidden = !got.length;
+    $("shelf").innerHTML = got.map((s) => `<span>${s}</span>`).join("");
+  }
+  function enterGame(starGoal, keyboard, skip) {
+    leaveHook?.();
+    leaveHook = null;
+    rawKeyHandler = null;
+    document.querySelector(".case-toggle")?.remove();
+    document.body.classList.add("playing");
+    numMode = false;
+    round++;
+    onHome = false;
+    stars = 0;
+    goal = starGoal;
+    stopSay();
+    $("home").hidden = true;
+    $("game").hidden = false;
+    $("keys").hidden = !keyboard;
+    $("skip").classList.toggle("ghosted", !skip);
+    $("stage").className = "";
+    $("stage").innerHTML = "";
+    drawStars();
+    return round;
+  }
+  function drawStars() {
+    $("stars").innerHTML = Array.from(
+      { length: goal },
+      (_, i) => `<span class="${i < stars ? "lit" : ""}">★</span>`,
+    ).join("");
+  }
+  async function addStar(r) {
+    stars++;
+    drawStars();
+    if (stars < goal) return;
+    await prize(r);
+    if (r === round) {
+      stars = 0;
+      drawStars();
+    }
+  }
+  async function prize(r) {
+    const sticker = skin.stickers[Math.floor(Math.random() * skin.stickers.length)];
+    store.set("stickers", [...store.get("stickers", []), sticker].slice(-40));
+    const bits = Array.from({ length: 26 }, () => {
+      const b = skin.bits[Math.floor(Math.random() * skin.bits.length)];
+      return `<span class="bit" style="left:${Math.random() * 100}%;animation-duration:${1.6 + Math.random() * 1.6}s;animation-delay:${Math.random() * 0.8}s">${b}</span>`;
+    }).join("");
+    $("prize").innerHTML = bits + `<div class="sticker">${sticker}</div>`;
+    $("prize").hidden = false;
+    fanfare();
+    await say(T.line.sticker);
+    await wait(1200);
+    if (r === round) $("prize").hidden = true;
+  }
+
+  let numMode = false;
+
+  // Keyboard
+  const keyEls = {};
+  const onTap = (el, fn) =>
+    el.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "mouse") fn();
+    });
+  function buildKeys() {
+    $("keys").innerHTML = "";
+    $("keys").dir = T.dir;
+    $("keys").classList.toggle("grid", !T.latin);
+    T.rows.forEach((line) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      for (const L of line) {
+        const k = document.createElement("div");
+        k.className = "key";
+        k.textContent = shown(L);
+        keyEls[L] = k;
+        // a Mac keyboard can't type these letters, so the mouse may press them
+        k.addEventListener("pointerdown", (e) => {
+          if (e.pointerType !== "mouse" || !/^[A-Z]$/.test(L)) keyHandler?.(L);
+        });
+        row.append(k);
+      }
+      $("keys").append(row);
+    });
+  }
+  const clearHint = () =>
+    Object.values(keyEls).forEach((k) => k.classList.remove("hint"));
+  function flash(L, cls, ms) {
+    const k = keyEls[L];
+    k.classList.remove(cls);
+    void k.offsetWidth;
+    k.classList.add(cls);
+    setTimeout(() => k.classList.remove(cls), ms);
+  }
+
+  // Modes 1 and 3: find the key, and type a word. A single letter is a one-letter word here.
+  function startTyping(kind) {
+    const r = enterGame(kind === "words" ? 3 : 5, true, false);
+    if (kind === "letters" && T.latin) caseToggle(() => startTyping(kind));
+    const name = herName();
+    const queue =
+      kind === "words"
+        ? [...(name ? [[name, "💖", true]] : []), ...shuffle(T.words)]
+        : [...new Set(name.split(""))]
+            .concat(shuffle(Object.keys(T.letters)))
+            .map((L) => [L]);
+    let target = "",
+      pos = 0,
+      ready = false,
+      hintTimer = 0,
+      lastNudge = 0,
+      missed = false,
+      item = null;
+
+    const ask = () =>
+      kind === "words"
+        ? say(
+            pos === 0
+              ? item[2]
+                ? T.line.typeName
+                : T.line.typeWord(target)
+              : target[pos],
+          )
+        : say(T.line.find(target));
+    const armHint = () => {
+      clearTimeout(hintTimer);
+      clearHint();
+      hintTimer = setTimeout(
+        () => {
+          if (r === round) keyEls[target[pos]].classList.add("hint");
+        },
+        kind === "words" ? 3000 : 4000,
+      );
+    };
+    function draw() {
+      const stage = $("stage");
+      if (kind === "words") {
+        stage.innerHTML = `<div class="wordbox"><div class="wordpic" id="again">${item[1]}</div>${T.latin ? "" : `<div class="wordtext" dir="${T.dir}">${target}</div>`}<div class="slots" dir="${T.dir}">${[
+          ...target,
+        ]
+          .map(
+            (L, i) =>
+              `<div class="slot ${i < pos ? "done" : i === pos ? "now" : ""}">${L}</div>`,
+          )
+          .join("")}</div></div>`;
+      } else {
+        stage.innerHTML = `<div class="letter" id="again">${shown(target)}</div><div class="pic" id="pic">${T.letters[target][1]}</div>`;
+      }
+      $("again").onclick = ask;
+    }
+    async function next() {
+      if (r !== round) return;
+      if (!queue.length)
+        queue.push(
+          ...(kind === "words"
+            ? shuffle(T.words)
+            : shuffle(Object.keys(T.letters)).map((L) => [L])),
+        );
+      item = queue.shift();
+      target = item[0];
+      pos = 0;
+      missed = false;
+      draw();
+      ready = true;
+      ask();
+      armHint();
+    }
+    async function finished() {
+      ready = false;
+      clearTimeout(hintTimer);
+      clearHint();
+      if (kind === "words") {
+        // the letter she just pressed, then the whole word spelled out, then the word itself
+        await say([
+          [...target].at(-1),
+          { pause: 500 },
+          ...target,
+          { pause: 250 },
+          item[2] ? T.line.yourName : T.line.word(target),
+        ]);
+      } else {
+        if (missed) queue.splice(3, 0, [target]); // a letter she found hard comes back soon
+        $("pic").classList.add("show");
+        await say(T.line.letterIs(target));
+        await wait(300);
+      }
+      if (r !== round) return;
+      await addStar(r);
+      next();
+    }
+    keyHandler = (L) => {
+      if (!ready) return;
+      if (L === target[pos]) {
+        flash(L, "good", 350);
+        ding();
+        pos++;
+        if (kind === "words") {
+          draw();
+          if (pos < target.length) {
+            say(L);
+            armHint();
+          } else finished();
+        } else finished();
+      } else {
+        missed = true;
+        flash(L, "nope", 300);
+        boop();
+        keyEls[target[pos]].classList.add("hint");
+        if (Date.now() - lastNudge > 3500) {
+          lastNudge = Date.now();
+          say(T.line.find(target[pos]));
+        }
+      }
+    };
+    next();
+  }
+
+  // Mode 2: trace. The pointer only has to move over the letter, because a four-year-old
+  // can't hold the trackpad down and drag at the same time.
+  function startTrace() {
+    if (!T.strokes) return startPaint();
+    const r = enterGame(3, false, true);
+    if (T.latin) caseToggle(startTrace);
+    const stage = $("stage");
+    stage.className = "tracing";
+    const name = [...new Set(herName().split(""))];
+    const order = [...name, ...TRACE_ORDER.concat(T.letters["Ñ"] ? ["Ñ"] : []).filter((L) => !name.includes(L))];
+    let at = store.get(traceKey(), 0) % order.length;
+    const NS = "http://www.w3.org/2000/svg";
+    let demoId = 0,
+      finishing = false,
+      strokes = [],
+      s = 0,
+      i = 0,
+      live = false,
+      L = "",
+      lastMove = 0,
+      lastNudge = 0;
+
+    function place(pt) {
+      $("guide").setAttribute("transform", `translate(${pt.x} ${pt.y})`);
+    }
+    function paint(st, upto) {
+      st.ink.setAttribute("stroke-dasharray", `${upto} 999`);
+      st.ink.style.visibility = upto > 0 ? "visible" : "hidden";
+    }
+    function load() {
+      L = order[at];
+      stage.innerHTML = `<svg id="trace" viewBox="0 0 100 100" aria-label="Letter ${L}"></svg><div class="pic" id="pic">${T.letters[L][1]}</div>`;
+      const svg = $("trace");
+      const add = (cls) => {
+        const p = document.createElementNS(NS, "path");
+        p.setAttribute("class", cls);
+        svg.append(p);
+        return p;
+      };
+      strokes = (lowerCase() ? STROKES_LOWER : STROKES)[lowerCase() ? L.toLowerCase() : L].map((d) => {
+        const bed = add("bed");
+        bed.setAttribute("d", d);
+        return { d, bed };
+      });
+      strokes.forEach((st) => {
+        st.ink = add("ink");
+        st.ink.setAttribute("d", st.d);
+        const len = st.bed.getTotalLength();
+        st.pts = [];
+        for (let t = 0; t <= len; t += 1)
+          st.pts.push(st.bed.getPointAtLength(t));
+        paint(st, 0);
+      });
+      const g = document.createElementNS(NS, "g");
+      g.id = "guide";
+      g.innerHTML = "<text>⭐</text>";
+      svg.append(g);
+      s = 0;
+      i = 0;
+      live = false;
+      place(strokes[0].pts[0]);
+    }
+    async function demo(id) {
+      say(T.line.thisIs(L));
+      await wait(500);
+      if (r !== round || id !== demoId) return;
+      const demoSvg = $("trace");
+      const shown = [];
+      for (const st of strokes) {
+        const line = document.createElementNS(NS, "path");
+        line.setAttribute("class", "demo");
+        line.setAttribute("d", st.d);
+        demoSvg.insertBefore(line, $("guide"));
+        shown.push(line);
+        const total = st.pts.length,
+          start = performance.now(),
+          ms = Math.max(500, total * 14);
+        await new Promise((done) => {
+          (function step(now) {
+            if (r !== round || id !== demoId) return done();
+            const n = Math.min(
+              total - 1,
+              Math.floor(((now - start) / ms) * total),
+            );
+            place(st.pts[n]);
+            line.setAttribute("stroke-dasharray", `${n} 999`);
+            n < total - 1 ? requestAnimationFrame(step) : done();
+          })(start);
+        });
+        if (r !== round || id !== demoId) return;
+        await wait(180);
+      }
+      shown.forEach((l) => l.remove());
+      place(strokes[0].pts[0]);
+      live = true;
+      lastMove = performance.now();
+      say(T.line.nowYou);
+    }
+    function begin() {
+      finishing = false;
+      load();
+      demo(++demoId);
+    }
+    async function letterDone() {
+      live = false;
+      finishing = true;
+      fanfareSmall();
+      store.set(traceKey(), (at + 1) % order.length);
+      $("guide").remove();
+      $("pic").classList.add("show");
+      await say(T.line.letterIs(L));
+      await wait(500);
+      if (r !== round) return;
+      await addStar(r);
+      if (r !== round) return;
+      at = (at + 1) % order.length;
+      begin();
+    }
+    const fanfareSmall = () =>
+      cheer();
+
+    function move(x, y) {
+      if (!live) return;
+      const svg = $("trace");
+      const m = svg.getScreenCTM();
+      if (!m) return;
+      const p = new DOMPoint(x, y).matrixTransform(m.inverse());
+      const st = strokes[s],
+        end = st.pts.length - 1;
+      for (let j = Math.min(i + LOOKAHEAD, end); j > i; j--) {
+        if (Math.hypot(st.pts[j].x - p.x, st.pts[j].y - p.y) < REACH) {
+          i = j;
+          lastMove = performance.now();
+          paint(st, i);
+          place(st.pts[i]);
+          break;
+        }
+      }
+      if (i < end) return;
+      paint(st, end + 1);
+      s++;
+      i = 0;
+      if (s >= strokes.length) return void letterDone();
+      ding();
+      place(strokes[s].pts[0]);
+    }
+    window.__traceMove = move;
+    $("crayon").hidden = false;
+    $("skip").onclick = () => {
+      if (r !== round || finishing) return;
+      at = (at + 1) % order.length;
+      store.set(traceKey(), at);
+      stopSay();
+      begin();
+    };
+    (async function nudge() {
+      while (r === round) {
+        await wait(1000);
+        if (
+          r === round &&
+          live &&
+          performance.now() - lastMove > 7000 &&
+          performance.now() - lastNudge > 12000
+        ) {
+          lastNudge = performance.now();
+          say(T.line.followStar);
+        }
+      }
+    })();
+    begin();
+  }
+
+  // Tracing for scripts with no stroke data: she colours the letter in. This teaches its shape
+  // without risking a wrong stroke order, and needs no holding down on a trackpad.
+  const COVERED = 0.8; // how much of the letter she must colour
+  function startPaint() {
+    const r = enterGame(3, false, true);
+    const stage = $("stage");
+    stage.className = "tracing";
+    $("crayon").hidden = false;
+    const order = T.rows.join("").split("");
+    let at = store.get(traceKey(), 0) % order.length,
+      L = "",
+      live = false,
+      lastPoint = null,
+      lastMove = 0,
+      lastNudge = 0,
+      cells = null,
+      total = 0,
+      painted = 0;
+    const SIZE = 600,
+      GRID = 100,
+      BRUSH = 46;
+    const layer = () => Object.assign(document.createElement("canvas"), { width: SIZE, height: SIZE });
+    function drawGlyph(ctx, size) {
+      ctx.font = `700 ${size * 0.72}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(L, size / 2, size * 0.5);
+    }
+    let mask, ink, view;
+    function paintView() {
+      const ctx = view.getContext("2d");
+      ctx.clearRect(0, 0, SIZE, SIZE);
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--ghost");
+      drawGlyph(ctx, SIZE);
+      const top = layer().getContext("2d");
+      top.drawImage(ink, 0, 0);
+      top.globalCompositeOperation = "destination-in";
+      top.drawImage(mask, 0, 0);
+      ctx.drawImage(top.canvas, 0, 0);
+    }
+    async function begin() {
+      L = order[at];
+      live = false;
+      await document.fonts?.load(`700 100px ${getComputedStyle(document.body).fontFamily}`, L);
+      if (r !== round || L !== order[at]) return;
+      stage.innerHTML = `<canvas id="paint" width="${SIZE}" height="${SIZE}" aria-label="${L}"></canvas><div class="pic" id="pic">${T.letters[L][1]}</div>`;
+      view = $("paint");
+      mask = layer();
+      const m = mask.getContext("2d");
+      m.fillStyle = "#000";
+      drawGlyph(m, SIZE);
+      ink = layer();
+      const small = Object.assign(document.createElement("canvas"), { width: GRID, height: GRID });
+      const s = small.getContext("2d", { willReadFrequently: true });
+      s.drawImage(mask, 0, 0, GRID, GRID);
+      const alpha = s.getImageData(0, 0, GRID, GRID).data;
+      cells = new Uint8Array(GRID * GRID);
+      total = painted = 0;
+      for (let i = 0; i < cells.length; i++)
+        if (alpha[i * 4 + 3] > 128) {
+          cells[i] = 1;
+          total++;
+        }
+      paintView();
+      live = true;
+      lastPoint = null;
+      lastMove = performance.now();
+      say(T.line.thisIs(L));
+    }
+    function stamp(x, y) {
+      const inkCtx = ink.getContext("2d");
+      inkCtx.strokeStyle = inkCtx.fillStyle = getComputedStyle(document.body).getPropertyValue("--ink");
+      inkCtx.lineWidth = BRUSH * 2;
+      inkCtx.lineCap = "round";
+      inkCtx.beginPath();
+      inkCtx.moveTo(lastPoint ? lastPoint.x : x, lastPoint ? lastPoint.y : y);
+      inkCtx.lineTo(x, y);
+      inkCtx.stroke();
+      const steps = lastPoint ? Math.ceil(Math.hypot(x - lastPoint.x, y - lastPoint.y) / 8) || 1 : 1;
+      const scale = GRID / SIZE,
+        reach = BRUSH * scale;
+      for (let step = 0; step <= steps; step++) {
+        const px = ((lastPoint ? lastPoint.x + ((x - lastPoint.x) * step) / steps : x) * scale) | 0,
+          py = ((lastPoint ? lastPoint.y + ((y - lastPoint.y) * step) / steps : y) * scale) | 0;
+        for (let gy = Math.max(0, py - reach); gy <= Math.min(GRID - 1, py + reach); gy++)
+          for (let gx = Math.max(0, px - reach); gx <= Math.min(GRID - 1, px + reach); gx++) {
+            const i = Math.round(gy) * GRID + Math.round(gx);
+            if (cells[i] === 1 && Math.hypot(gx - px, gy - py) <= reach) {
+              cells[i] = 2;
+              painted++;
+            }
+          }
+      }
+      lastPoint = { x, y };
+      paintView();
+    }
+    async function letterDone() {
+      live = false;
+      cheer();
+      store.set(traceKey(), (at + 1) % order.length);
+      // fill the rest so the finished letter is complete
+      ink.getContext("2d").fillRect(0, 0, SIZE, SIZE);
+      paintView();
+      $("pic").classList.add("show");
+      await say(T.line.letterIs(L));
+      await wait(500);
+      if (r !== round) return;
+      await addStar(r);
+      if (r !== round) return;
+      at = (at + 1) % order.length;
+      begin();
+    }
+    window.__traceMove = (x, y) => {
+      if (!live) return;
+      const box = view.getBoundingClientRect();
+      const px = ((x - box.left) / box.width) * SIZE,
+        py = ((y - box.top) / box.height) * SIZE;
+      if (px < -BRUSH || py < -BRUSH || px > SIZE + BRUSH || py > SIZE + BRUSH) {
+        lastPoint = null;
+        return;
+      }
+      stamp(px, py);
+      lastMove = performance.now();
+      if (painted / total >= COVERED) letterDone();
+    };
+    $("skip").onclick = () => {
+      if (r !== round || !live) return;
+      at = (at + 1) % order.length;
+      store.set(traceKey(), at);
+      stopSay();
+      begin();
+    };
+    (async function nudge() {
+      while (r === round) {
+        await wait(1000);
+        if (r === round && live && performance.now() - lastMove > 7000 && performance.now() - lastNudge > 12000) {
+          lastNudge = performance.now();
+          say(T.line.followStar);
+        }
+      }
+    })();
+    begin();
+  }
+
+  // Mode 4: numbers. Things come in rods of ten plus loose ones, so big numbers stay countable.
+  // Space adds one and return adds a whole ten. Ten loose ones snap together into a rod.
+  const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const NUM_LEVELS = [
+    { chip: "1–10", pick: () => rand(1, 10) },
+    { chip: "11–19", pick: () => rand(11, 19) },
+    { chip: "10, 20, 30", pick: () => rand(1, 10) * 10 },
+    { chip: "→ 100", pick: () => rand(21, 99) },
+    { chip: "100 ▦", chart: true },
+  ];
+  const GROWING_LEVELS = 4; // stickers move her up through these, but not into the chart
+  function countAlong(n) {
+    const t = Math.floor(n / 10),
+      said = [];
+    for (let i = 1; i <= t; i++) said.push(i * 10);
+    for (let i = t * 10 + 1; i <= n; i++) said.push(i);
+    return said;
+  }
+  function rodsHtml(
+    tens,
+    ones,
+    pic,
+    { total = tens, frame = true, fresh = "" } = {},
+  ) {
+    const cell = (full, pop) =>
+      `<div class="cell ${full ? "" : "empty"} ${pop ? "pop" : ""}">${full ? pic : ""}</div>`;
+    let html = "";
+    for (let i = 0; i < Math.max(total, tens); i++) {
+      const full = i < tens;
+      html += `<div class="rod ${fresh === "rod" && i === tens - 1 ? "pop" : ""}">${cell(full).repeat(10)}</div>`;
+    }
+    if (frame) {
+      html += '<div class="frame">';
+      for (let i = 0; i < 10; i++)
+        html += cell(i < ones, fresh === "one" && i === ones - 1);
+      html += "</div>";
+    }
+    return html;
+  }
+
+  function startCount() {
+    const r = enterGame(4, false, false);
+    numMode = true;
+    const stage = $("stage");
+    stage.className = "numbers";
+    let level = store.get("numLevel", 0) % NUM_LEVELS.length;
+    let last = 0,
+      makeTurn = true,
+      ready = false,
+      hintTimer = 0,
+      lastNudge = 0,
+      explained = false;
+
+    const hintKey = (k, ms) => {
+      clearTimeout(hintTimer);
+      clearHint();
+      hintTimer = setTimeout(() => {
+        if (r === round && keyEls[k]?.isConnected)
+          keyEls[k].classList.add("hint");
+      }, ms);
+    };
+    const showHint = (k) => {
+      clearTimeout(hintTimer);
+      clearHint();
+      keyEls[k]?.classList.add("hint");
+    };
+    const pressed = (k, cls, ms) => {
+      if (keyEls[k]?.isConnected) flash(k, cls, ms);
+    };
+    function shell(playHtml, keysHtml) {
+      const chips = NUM_LEVELS.map(
+        (l, i) =>
+          `<button class="chip ${i === level ? "on" : ""}" data-level="${i}">${l.chip}</button>`,
+      ).join("");
+      stage.innerHTML = `<div class="levels">${chips}</div><div class="play">${playHtml}</div><div class="numkeys">${keysHtml}</div>`;
+      stage.querySelectorAll("[data-level]").forEach((b) => {
+        b.onclick = () => {
+          level = +b.dataset.level;
+          store.set("numLevel", level);
+          stars = 0;
+          begin();
+        };
+      });
+      stage.querySelectorAll("[data-k]").forEach((el) => {
+        keyEls[el.dataset.k] = el;
+        onTap(el, () => keyHandler && keyHandler(el.dataset.k));
+      });
+      document.activeElement?.blur?.(); // a focused button would swallow the space bar
+    }
+    const bigKeys = (showReturn, showSpace) =>
+      '<div class="keyrow">' +
+      (showSpace
+        ? '<div class="key wide space" data-k="SPACE"><small>' + T.ui.space + "</small>+1</div>"
+        : "") +
+      (showReturn
+        ? '<div class="key wide return" data-k="RETURN"><small>' + T.ui.enter + "</small>+10</div>"
+        : "") +
+      "</div>";
+    const digitKeys = () =>
+      '<div class="keyrow">' +
+      [..."1234567890"]
+        .map((d) => `<div class="key" data-k="${d}">${d}</div>`)
+        .join("") +
+      "</div>";
+
+    async function solved(n) {
+      ready = false;
+      clearTimeout(hintTimer);
+      clearHint();
+      cheer();
+      await say(T.line.madeOf(n));
+      await wait(400);
+      if (r !== round) return;
+      const before = goal;
+      await addStar(r);
+      if (r !== round) return;
+      if (stars === 0 && before === goal && level < GROWING_LEVELS - 1) {
+        level++; // a sticker means she's ready for bigger numbers
+        store.set("numLevel", level);
+      }
+      begin();
+    }
+
+    // She sees a number and builds it.
+    function makeRound(n, thing) {
+      const pic = thing[0];
+      let tens = 0,
+        ones = 0,
+        fresh = "";
+      const total = () => tens * 10 + ones;
+      const targetRods = Math.floor(n / 10);
+      const usesTens = n >= 10;
+      const nextKey = () => (n - total() >= 10 ? "RETURN" : "SPACE");
+      const onlyTens = n % 10 === 0 && n > 10;
+      const draw = () => {
+        $("qty").innerHTML = rodsHtml(tens, ones, pic, {
+          total: targetRods,
+          frame: !onlyTens,
+          fresh,
+        });
+        $("sofar").textContent = total();
+      };
+      shell(
+        `<div class="numeral" id="again">${n}${nativeDigits(n)}</div><div class="qtybox"><div class="qty" id="qty"></div><div class="sofar" id="sofar">0</div></div>`,
+        bigKeys(usesTens, !onlyTens),
+      );
+      draw();
+      const ask = () => {
+        if (n < 10)
+          return say(T.line.pressSpace(n));
+        const lines = [T.line.make(n)];
+        if (!explained) {
+          explained = true;
+          lines.push(T.line.tensExplained);
+        }
+        return say(lines);
+      };
+      $("again").onclick = ask;
+      ask();
+      hintKey(nextKey(), 4000);
+      ready = true;
+      keyHandler = (k) => {
+        if (!ready || (k !== "SPACE" && k !== "RETURN")) return;
+        if (k === "SPACE" && onlyTens) {
+          pressed(k, "nope", 300);
+          boop();
+          showHint("RETURN");
+          return;
+        }
+        if (k === "RETURN" && (!usesTens || total() + 10 > n)) {
+          pressed(k, "nope", 300);
+          boop();
+          showHint("SPACE");
+          if (Date.now() - lastNudge > 3500) {
+            lastNudge = Date.now();
+            say(T.line.nowSpace);
+          }
+          return;
+        }
+        if (k === "RETURN") {
+          tens++;
+          fresh = "rod";
+        } else {
+          ones++;
+          fresh = "one";
+          if (ones === 10) {
+            ones = 0;
+            tens++;
+            fresh = "rod";
+          }
+        }
+        draw();
+        pressed(k, "good", 200);
+        if (total() === n) return void solved(n);
+        ding();
+        say(String(total()));
+        hintKey(nextKey(), 4000);
+      };
+    }
+
+    // She sees a group of things, counts them and types how many.
+    function countRound(n, thing) {
+      const digits = String(n);
+      let pos = 0;
+      const t = Math.floor(n / 10),
+        o = n % 10;
+      shell(
+        `<div class="qty">${rodsHtml(t, o, thing[0], { frame: o > 0 })}</div><div class="slots" id="slots"></div>`,
+        digitKeys(),
+      );
+      const draw = () => {
+        $("slots").innerHTML = [...digits]
+          .map(
+            (d, i) =>
+              `<div class="slot ${i < pos ? "done" : i === pos ? "now" : ""}">${i < pos ? d : "?"}</div>`,
+          )
+          .join("");
+      };
+      draw();
+      const ask = () => say(T.line.howMany(thing[1]));
+      ask();
+      $("slots").onclick = ask;
+      const wait4 = 8000 + n * 150; // bigger groups take her longer to count
+      hintKey(digits[0], wait4);
+      ready = true;
+      keyHandler = (k) => {
+        if (!ready || !/^[0-9]$/.test(k)) return;
+        if (k === digits[pos]) {
+          pressed(k, "good", 300);
+          pos++;
+          draw();
+          if (pos === digits.length) return void solved(n);
+          ding();
+          hintKey(digits[pos], 5000);
+        } else {
+          pressed(k, "nope", 300);
+          boop();
+          showHint(digits[pos]);
+          if (Date.now() - lastNudge > 6000) {
+            lastNudge = Date.now();
+            say([T.line.letsCount, ...countAlong(n)]);
+          }
+        }
+      };
+    }
+
+    // Free counting: every press lights the next square, and each finished row earns a star.
+    function chartRound() {
+      goal = 10;
+      stars = 0;
+      drawStars();
+      let at = 0;
+      const squares = Array.from(
+        { length: 100 },
+        (_, i) => `<div class="n" data-n="${i + 1}">${i + 1}</div>`,
+      ).join("");
+      shell(
+        `<div class="chart" id="chart">${squares}</div>`,
+        bigKeys(true, true),
+      );
+      const cells = [...$("chart").children];
+      say(T.line.chartStart);
+      ready = true;
+      keyHandler = async (k) => {
+        if (!ready || (k !== "SPACE" && k !== "RETURN")) return;
+        const to =
+          k === "RETURN"
+            ? Math.min(100, (Math.floor(at / 10) + 1) * 10)
+            : at + 1;
+        cells[at - 1]?.classList.remove("now");
+        for (let i = at; i < to; i++) cells[i].classList.add("on");
+        at = to;
+        cells[at - 1].classList.add("now");
+        pressed(k, "good", 200);
+        if (at === 100) {
+          ready = false;
+          stars = 9;
+          drawStars();
+          cheer();
+          await say(T.line.chartDone);
+          if (r !== round) return;
+          await addStar(r);
+          if (r === round) begin();
+          return;
+        }
+        ding();
+        say(String(at));
+        if (at % 10 === 0) {
+          stars = at / 10;
+          drawStars();
+        }
+      };
+    }
+
+    function begin() {
+      clearTimeout(hintTimer);
+      clearHint();
+      keyHandler = null;
+      const l = NUM_LEVELS[level];
+      if (l.chart) return chartRound();
+      goal = 4;
+      drawStars();
+      let n = l.pick();
+      while (n === last) n = l.pick();
+      last = n;
+      const thing = T.things[rand(0, T.things.length - 1)];
+      (makeTurn ? makeRound : countRound)(n, thing);
+      makeTurn = !makeTurn;
+    }
+    begin();
+  }
+
+  let lastPen = 0;
+  function tracePointer(e) {
+    if (e.pointerType === "pen") lastPen = e.timeStamp;
+    if (e.pointerType === "touch" && e.timeStamp - lastPen < 2000) return; // her palm while using Pencil
+    const tracing = !onHome && $("stage").classList.contains("tracing");
+    // the round pointer only helps a mouse or trackpad; a finger or Pencil is its own pointer
+    $("crayon").style.visibility =
+      tracing && e.pointerType === "mouse" ? "visible" : "hidden";
+    $("crayon").style.left = e.clientX + "px";
+    $("crayon").style.top = e.clientY + "px";
+    if (!tracing || !window.__traceMove) return;
+    const evs = e.getCoalescedEvents?.() || [];
+    (evs.length ? evs : [e]).forEach((ev) =>
+      window.__traceMove(ev.clientX, ev.clientY),
+    );
+  }
+  window.addEventListener("pointermove", tracePointer);
+  window.addEventListener("pointerdown", tracePointer);
+  window.addEventListener("keydown", (e) => {
+    if (onHome || e.metaKey || e.ctrlKey || e.altKey) return; // grown-up shortcuts still work
+    if (e.key !== "Escape") e.preventDefault();
+    if (rawKeyHandler) return void (e.repeat || rawKeyHandler(e.key));
+    if (e.repeat || !keyHandler) return;
+    const k =
+      e.key === " "
+        ? "SPACE"
+        : e.key === "Enter"
+          ? "RETURN"
+          : e.key.toUpperCase();
+    if (numMode ? /^([0-9]|SPACE|RETURN)$/.test(k) : k in T.letters) keyHandler(k);
+  });
+
+  $("go-letters").onclick = () => launch("letters", () => startTyping("letters"));
+  $("go-words").onclick = () => launch("words", () => startTyping("words"));
+  $("go-count").onclick = () => launch("count", startCount);
+  $("go-trace").onclick = () => {
+    keyHandler = null;
+    launch("trace", startTrace);
+  };
+  document.addEventListener("dblclick", (e) => e.preventDefault()); // fast taps must never zoom
+  $("back").onclick = showHome;
+  $("kid-name").value = store.get("name", "");
+  $("kid-name").oninput = (e) => store.set("name", e.target.value);
+  $("full-group").hidden = !document.fullscreenEnabled;
+  $("full").onclick = () =>
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  // Theme: a global setting. Any entry in themes.js works here with no other changes.
+  let skin = THEMES[DEFAULT_THEME];
+  function setTheme(id) {
+    skin = THEMES[id] || THEMES[DEFAULT_THEME];
+    store.set("theme", THEMES[id] ? id : DEFAULT_THEME);
+    for (const [name, value] of Object.entries(skin.colors))
+      document.documentElement.style.setProperty("--" + name, value);
+    $("scene").innerHTML = sceneSvg(skin) + floaters(skin);
+    $("mascot").textContent = skin.mascot;
+    document.querySelectorAll(".theme").forEach((b) => b.classList.toggle("on", THEMES[b.dataset.theme] === skin));
+  }
+  for (const [id, theme] of Object.entries(THEMES)) {
+    const card = document.createElement("button");
+    card.className = "theme";
+    card.dataset.theme = id;
+    card.style.background = theme.colors.bg;
+    card.innerHTML = sceneSvg(theme).replace(/id="(\w+)"/g, `id="${id}-$1"`).replace(/url\(#(\w+)\)/g, `url(#${id}-$1)`) + `<span>${theme.label}</span>`;
+    card.onclick = () => {
+      setTheme(id);
+      cheer();
+    };
+    $("themes").append(card);
+  }
+  $("open-settings").onclick = () => {
+    $("home").hidden = true;
+    $("settings").hidden = false;
+  };
+  $("close-settings").onclick = showHome;
+
+  // Language: a global setting. Each voice file loads only when its language is chosen.
+  function loadVoice(code) {
+    return new Promise((done) => {
+      if (window.VOICES?.[code]) return done();
+      const tag = document.createElement("script");
+      tag.src = `voice-${code}.js`;
+      tag.onload = tag.onerror = done;
+      document.head.append(tag);
+    });
+  }
+  async function setLanguage(code, greet) {
+    T = LANGS[code] || LANGS.en;
+    store.set("language", T.code);
+    document.querySelectorAll("#langs .chip").forEach((b) => b.classList.toggle("on", b.dataset.code === T.code));
+    $("lang-badge").textContent = T.label;
+    $("first-letter").textContent = Object.keys(T.letters)[0];
+    $("trace-pic").textContent = T.strokes ? "⭐" : "🖍️";
+    for (const part of ["letters", "trace", "words", "count", ...EXTRA_GAMES.map((g) => g.part)]) {
+      $("label-" + part).textContent = T.ui[part];
+      $("label-" + part).dir = T.dir;
+    }
+    buildKeys();
+    $("modes").inert = true; // wait for her voice, so no prompt goes silent
+    await loadVoice(T.code);
+    $("modes").inert = false;
+    showHowTo();
+    showLearning();
+    if (greet && onHome) say(T.line.hello);
+  }
+  function showLearning() {
+    const chosen = learningLanguages();
+    document.querySelectorAll("[data-learn]").forEach((b) => {
+      b.classList.toggle("on", chosen.includes(b.dataset.learn));
+      b.setAttribute("aria-pressed", chosen.includes(b.dataset.learn));
+    });
+  }
+  for (const game of EXTRA_GAMES) {
+    const card = document.createElement("button");
+    card.className = "mode";
+    card.id = "go-" + game.part;
+    card.innerHTML = `<b>${game.pic}</b><span id="label-${game.part}"></span>`;
+    card.onclick = () => launch(game.part, game.start);
+    $("modes").append(card);
+  }
+  for (const code of Object.keys(LANGS)) {
+    LANGS[code].code = code;
+    const pick = document.createElement("button");
+    pick.className = "chip";
+    pick.dataset.code = code;
+    pick.lang = code;
+    pick.textContent = LANGS[code].label;
+    pick.onclick = () => setLanguage(code, true);
+    $("langs").append(pick);
+    const learn = document.createElement("button");
+    learn.className = "chip";
+    learn.dataset.learn = code;
+    learn.lang = code;
+    learn.textContent = LANGS[code].label;
+    learn.onclick = () => {
+      const chosen = new Set(learningLanguages());
+      if (chosen.has(code) && code !== T.code) chosen.delete(code);
+      else chosen.add(code);
+      store.set("known", [...chosen]);
+      showLearning();
+    };
+    $("known").append(learn);
+  }
+  setTheme(store.get("theme", DEFAULT_THEME));
+  setLanguage(store.get("language", "en"));
+  showHome();
+</script>

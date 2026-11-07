@@ -1,0 +1,535 @@
+/* Styles for the newer games. Every colour comes from the theme tokens, so all themes just work. */
+#stage.panel {
+  flex-direction: column;
+  gap: 2.4vh;
+  padding-block: 1vh;
+  min-width: 0;
+}
+.gap {
+  flex: 0 0 10px;
+}
+.wrong {
+  animation: wiggle 0.3s;
+}
+.right {
+  background: var(--mint) !important;
+  color: var(--key) !important;
+  border-color: var(--moon) !important;
+}
+.unknown {
+  color: var(--glow);
+}
+.warn {
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 16px;
+  color: var(--key);
+  background: var(--glow);
+  border-radius: 12px;
+}
+.case-toggle {
+  min-height: 48px;
+  font-size: 20px;
+}
+
+/* Things to drag */
+.food {
+  display: grid;
+  place-items: center;
+  width: min(11vh, 12vw);
+  height: min(11vh, 12vw);
+  font-size: min(8.4vh, 9vw);
+  line-height: 1;
+  cursor: grab;
+  transition: transform 0.08s;
+  position: relative;
+}
+
+/* Feed the animal */
+.feed {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4vw;
+}
+.pile {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 0.6vw;
+  width: min(50vw, 76vh);
+}
+.eater {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vh;
+}
+.animal {
+  padding: 2vh;
+  font-size: min(30vh, 24vw);
+  line-height: 1;
+  background: var(--card);
+  border: 3px solid var(--key-edge);
+  border-radius: 50%;
+}
+.animal.munch {
+  animation: pop 0.3s;
+}
+.tally {
+  font-size: clamp(28px, 7vh, 60px);
+  font-weight: 800;
+  color: var(--moon);
+}
+.tally b {
+  color: var(--glow);
+}
+
+/* Adding and patterns */
+.sum,
+.pattern {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2vw;
+  padding: 2vh 3vw;
+  background: var(--card);
+  border-radius: 30px;
+  cursor: pointer;
+}
+.sum b {
+  font-size: min(13vh, 13vw);
+  line-height: 1;
+  font-weight: 800;
+}
+.group-of {
+  max-width: 26vw;
+  font-size: min(9vh, 7.5vw);
+  line-height: 1.2;
+  text-align: center;
+}
+.pattern {
+  font-size: min(10vh, 8.4vw);
+  line-height: 1.2;
+}
+.answers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3vw;
+}
+.answer {
+  min-width: min(20vh, 22vw);
+  min-height: min(20vh, 22vw);
+  font-size: min(12vh, 13vw);
+  font-weight: 800;
+  line-height: 1;
+  background: var(--card);
+  border: 4px solid var(--key-edge);
+  border-radius: 30px;
+  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.28);
+}
+
+/* Memory */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, min(21vh, 21vw));
+  gap: 2vh;
+}
+.card {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.3s;
+}
+.card.up {
+  transform: rotateY(180deg);
+}
+.card span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border: 3px solid var(--key-edge);
+  background: var(--card);
+  font-size: min(11vh, 11vw);
+  line-height: 1;
+}
+.card .front {
+  transform: rotateY(180deg);
+  background: var(--key);
+}
+.card .front.big {
+  font-weight: 800;
+  color: var(--glow);
+}
+.card.done .front {
+  border-color: var(--mint);
+  box-shadow: 0 0 0 3px var(--mint);
+}
+.dots {
+  position: static !important;
+  display: block !important;
+  border: 0 !important;
+  background: none !important;
+  padding: 8%;
+  font-size: min(4.6vh, 4.8vw) !important;
+  letter-spacing: 0.08em;
+  line-height: 1.1 !important;
+  color: var(--glow);
+  word-break: break-all;
+  text-align: center;
+}
+
+/* Shapes */
+.shapes {
+  display: grid;
+  grid-template-columns: repeat(3, min(30vh, 27vw));
+  gap: 2vh;
+}
+.shape {
+  padding: 8%;
+  aspect-ratio: 1;
+  max-width: 100%;
+  background: var(--card);
+  border: 4px solid var(--key-edge);
+  border-radius: 28px;
+}
+
+/* Sorting */
+.sorter {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 2vw;
+  align-items: stretch;
+}
+.basket {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 4px;
+  padding: 2vh;
+  background: var(--card);
+  border: 4px dashed var(--key-edge);
+  border-radius: 30px;
+}
+.basket b {
+  width: 100%;
+  font-size: min(10vh, 10vw);
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+}
+.sorted {
+  font-size: min(6vh, 6vw);
+}
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 1vw;
+}
+
+/* Say it */
+.said {
+  min-height: 7vh;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 24px;
+  font-size: min(6vh, 7vw);
+  font-weight: 700;
+  color: var(--glow);
+}
+.words {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, min(11vw, 17vh)));
+  gap: 1.4vw;
+}
+.word-pic {
+  aspect-ratio: 1;
+  padding: 0;
+  font-size: min(9vh, 7vw);
+  line-height: 1;
+  background: var(--card);
+  border: 3px solid var(--key-edge);
+  border-radius: 20px;
+}
+@media (max-aspect-ratio: 1/1) {
+  .words {
+    grid-template-columns: repeat(4, minmax(0, 20vw));
+  }
+  .word-pic {
+    font-size: 13vw;
+  }
+  .feed {
+    flex-direction: column-reverse;
+  }
+  .pile {
+    width: 90vw;
+  }
+  .animal {
+    font-size: 20vh;
+  }
+}
+
+/* Drawing */
+.draw {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2vh;
+}
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--card);
+  border-radius: 999px;
+}
+.ink {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+}
+.ink.on {
+  border-color: var(--glow);
+  box-shadow: 0 0 0 3px var(--glow);
+}
+.size {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--key);
+  border: 2px solid var(--key-edge);
+  border-radius: 50%;
+}
+.size i {
+  display: block;
+  border-radius: 50%;
+  background: var(--moon);
+}
+.size.on {
+  border-color: var(--glow);
+  box-shadow: 0 0 0 2px var(--glow);
+}
+.tool {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  background: var(--key);
+  border: 2px solid var(--key-edge);
+  border-radius: 14px;
+}
+#page {
+  width: min(100%, calc((100vh - 170px) * 4 / 3));
+  height: auto;
+  aspect-ratio: 4 / 3;
+  touch-action: none;
+  border-radius: 20px;
+  box-shadow: 0 0 0 4px var(--key-edge);
+  cursor: crosshair;
+}
+
+/* Gallery */
+.pictures {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 44vw), 1fr));
+  gap: 14px;
+  align-content: start;
+  padding: 4px;
+}
+.picture {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--card);
+  border: 3px solid var(--key-edge);
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.picture img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.picture.empty {
+  align-items: center;
+  font-size: 22px;
+}
+.picture.empty b {
+  font-size: 80px;
+  font-weight: 400;
+}
+.big-picture {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.big-picture img {
+  flex: 1;
+  min-height: 0;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 18px;
+}
+.caption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Piano */
+.piano-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.piano-bar .chip {
+  min-height: 50px;
+  min-width: 56px;
+  font-size: 24px;
+  line-height: 1;
+}
+.piano {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  touch-action: none;
+  background: var(--key);
+  border-radius: 18px;
+}
+.white {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2.4vh;
+  font-size: clamp(16px, 3.4vh, 30px);
+  font-weight: 800;
+  color: #30274f;
+  background: linear-gradient(180deg, #fffdf5, #f2eadb);
+  border-radius: 0 0 14px 14px;
+  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+.white.down {
+  background: var(--mint);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+}
+.white.next {
+  background: var(--glow);
+  animation: throb 1s infinite;
+}
+.black {
+  position: absolute;
+  top: 0;
+  right: -32%;
+  z-index: 2;
+  width: 58%;
+  height: 58%;
+  background: linear-gradient(180deg, #2b2b35, #0c0c12);
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+.black.down {
+  background: var(--mint);
+}
+.black.next {
+  background: var(--glow);
+  animation: throb 1s infinite;
+}
+
+/* Instructions */
+.help {
+  position: absolute;
+  top: 12px;
+  left: 72px;
+  z-index: 3;
+}
+.how {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-block: 6px;
+  border-top: 1px solid var(--key-edge);
+  font-size: 16px;
+  line-height: 1.3;
+}
+.how b {
+  font-size: 18px;
+}
+
+/* The language she is playing in, always at the top right */
+#top-tools {
+  position: absolute;
+  top: 22px;
+  right: 72px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#game:has(#skip.ghosted) #top-tools {
+  right: 0;
+}
+.lang-badge {
+  padding: 6px 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--key);
+  background: var(--glow);
+  border-radius: 999px;
+}
