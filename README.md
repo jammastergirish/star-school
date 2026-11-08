@@ -1,6 +1,6 @@
-# Star School
+# Tara School
 
-A learning game for a four-year-old: letters, writing, words, numbers, music and more. Every instruction is spoken, so she doesn't need to read.
+Tara means star in Hindi. A learning game for a four-year-old: letters, writing, words, numbers, music and more. Every instruction is spoken, so she doesn't need to read.
 
 It runs in a browser on a Mac, or as an iPad app with finger and Apple Pencil. It works offline, because all the speech is recorded in advance.
 
@@ -9,6 +9,7 @@ It runs in a browser on a Mac, or as an iPad app with finger and Apple Pencil. I
 - **Find the key:** find a letter on the keyboard, in capitals or lowercase.
 - **Follow the star:** trace a letter by following a star.
 - **Type a word:** spell a word under its picture.
+- **Starts with:** hear a word and tap the letter it begins with.
 - **Count:** build numbers to 100 in tens and ones, or count and type how many.
 - **Draw:** draw freely, with a gallery that saves each picture with its date and time.
 - **Feed the animal:** drag in exactly as much food as it asks for.

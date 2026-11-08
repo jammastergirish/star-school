@@ -472,6 +472,10 @@ function addGameContent(LANGS) {
     T.locale = extra.locale;
     T.notes = extra.notes;
     Object.assign(T.line, extra.line);
+    T.ui.sounds = STARTS[code].ui;
+    T.line.how.sounds = STARTS[code].how;
+    T.line.startAsk = STARTS[code].ask;
+    T.line.startSay = STARTS[code].say;
   }
 }
 
@@ -484,6 +488,11 @@ function gameLines(code, LANGS) {
   for (const value of Object.values(L))
     if (typeof value === "string") lines.push(value);
   for (const value of Object.values(L.how)) lines.push(value);
+  lines.push(STARTS[code].how);
+  for (const letter of startLetters(code, T)) {
+    const word = T.letters[letter][0];
+    lines.push(STARTS[code].ask(word), STARTS[code].say(word));
+  }
   for (const word of VOCAB) lines.push(word[code]);
   for (const note of T.notes) if (!T.letters?.[note]) lines.push(note);
   for (const feed of FEEDS)
@@ -502,5 +511,55 @@ function gameLines(code, LANGS) {
   return lines;
 }
 
+// Starts with: she hears a word and taps the letter it begins with. Letters whose word doesn't begin
+// with that letter's usual sound are left out, and letters that sound alike never appear together.
+const capital = (word) => word.charAt(0).toUpperCase() + word.slice(1);
+const STARTS = {
+  en: {
+    skip: ["I", "X"],
+    alike: [["C", "K", "Q", "S"]],
+    ui: "Starts with",
+    how: "Listen to the word, then tap the letter it starts with.",
+    ask: (w) => `${capital(w)}. What does ${w} start with?`,
+    say: (w) => `${capital(w)} starts with`,
+  },
+  fr: {
+    skip: ["C", "E", "G", "H", "O", "W", "X"],
+    alike: [["K", "Q"], ["S", "Z"]],
+    ui: "Première lettre",
+    how: "Écoute le mot, puis touche la lettre par laquelle il commence.",
+    ask: (w) => `${capital(w)}. Par quelle lettre commence ${w} ?`,
+    say: (w) => `${capital(w)} commence par`,
+  },
+  es: {
+    skip: ["H", "W", "X"],
+    alike: [["B", "V"], ["C", "K", "Q", "S", "Z"], ["G", "J"], ["I", "Y"]],
+    ui: "¿Con qué empieza?",
+    how: "Escucha la palabra y toca la letra con la que empieza.",
+    ask: (w) => `${capital(w)}. ¿Con qué letra empieza ${w}?`,
+    say: (w) => `${capital(w)} empieza con la`,
+  },
+  hi: {
+    skip: [],
+    alike: [["श", "स"], ["ब", "व"], ["अ", "आ"], ["इ", "ई"], ["उ", "ऊ"], ["ए", "ऐ"], ["ओ", "औ"], ["ट", "त"], ["ड", "द"]],
+    ui: "पहला अक्षर",
+    how: "शब्द सुनो, फिर वह अक्षर छुओ जिससे वह शुरू होता है।",
+    ask: (w) => `${w}। ${w} किस अक्षर से शुरू होता है?`,
+    say: (w) => `${w} का पहला अक्षर है`,
+  },
+  ar: {
+    skip: [],
+    alike: [["ت", "ط"], ["س", "ص"], ["ذ", "ز", "ظ"], ["ح", "خ", "ه"], ["ك", "ق"], ["د", "ض"], ["أ", "ع"]],
+    ui: "الحرف الأول",
+    how: "استمعي إلى الكلمة، ثم المسي الحرف الذي تبدأ به.",
+    ask: (w) => `${w}. بأي حرف تبدأ كلمة ${w}؟`,
+    say: (w) => `كلمة ${w} تبدأ بحرف`,
+  },
+};
+// The letters this game may ask about, in one language.
+const startLetters = (code, T) => Object.keys(T.letters).filter((L) => !STARTS[code].skip.includes(L));
+// Two letters that sound alike, so they are never offered side by side.
+const soundAlike = (code, a, b) => STARTS[code].alike.some((group) => group.includes(a) && group.includes(b));
+
 if (typeof module !== "undefined")
-  module.exports = { VOCAB, COLOURS, SHAPES, FEEDS, gameLines, addGameContent };
+  module.exports = { STARTS, startLetters, soundAlike, VOCAB, COLOURS, SHAPES, FEEDS, gameLines, addGameContent };

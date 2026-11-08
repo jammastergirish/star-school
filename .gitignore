@@ -4,3 +4,4 @@ ios/build/
 ios/*.xcodeproj/
 .DS_Store
 .ruff_cache/
+appstore/build/

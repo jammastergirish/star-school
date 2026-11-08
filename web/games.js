@@ -3,6 +3,7 @@
 addGameContent(LANGS);
 
 const EXTRA_GAMES = [
+  { part: "sounds", pic: "🔤", start: startSounds },
   { part: "draw", pic: "🎨", start: startDraw },
   { part: "feed", pic: "🐵", start: startFeed },
   { part: "add", pic: "🧮", start: startAdd },
@@ -901,4 +902,81 @@ function showHowTo() {
   $("how-to").innerHTML = parts
     .map((part) => `<div class="how" dir="${T.dir}"><b>${T.ui[part]}</b><span>${T.line.how[part]}</span></div>`)
     .join("");
+}
+
+// A grown-up check before Settings, as Apple asks of children's apps: a sum she can't do yet.
+function grownUpCheck(onPass) {
+  const a = between(4, 9),
+    b = between(4, 9),
+    answer = String(a * b);
+  let typed = "";
+  const gate = document.createElement("div");
+  gate.id = "gate";
+  gate.innerHTML = `<div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gate-question">
+      <p>For grown-ups</p>
+      <h2 id="gate-question">What is ${a} × ${b}?</h2>
+      <div class="gate-typed" id="gate-typed">&nbsp;</div>
+      <div class="gate-keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9, "✕", 0, "⌫"].map((k) => `<button data-k="${k}">${k}</button>`).join("")}</div>
+    </div>`;
+  document.body.append(gate);
+  const show = () => ($("gate-typed").textContent = typed || " ");
+  gate.querySelectorAll("[data-k]").forEach((button) => {
+    button.onclick = () => {
+      const k = button.dataset.k;
+      if (k === "✕") return gate.remove();
+      if (k === "⌫") typed = typed.slice(0, -1);
+      else if (typed.length < 2) typed += k;
+      show();
+      if (typed.length < answer.length) return;
+      if (typed === answer) {
+        gate.remove();
+        onPass();
+      } else {
+        typed = "";
+        show();
+        wiggle($("gate-question"));
+      }
+    };
+  });
+  gate.onclick = (e) => e.target === gate && gate.remove();
+}
+
+// Starts with: she hears a word, sees its picture, and taps the letter it begins with.
+function startSounds() {
+  const r = enterGame(5, false, false);
+  const pool = startLetters(T.code, T);
+  let last = null;
+  function next() {
+    let target = pickFrom(pool);
+    while (target === last && pool.length > 1) target = pickFrom(pool);
+    last = target;
+    const [word, pic] = T.letters[target];
+    const others = shuffle(pool.filter((L) => L !== target && !soundAlike(T.code, L, target)));
+    const choices = shuffle([target, ...others.slice(0, 2)]);
+    const ask = T.line.startAsk(word);
+    panel(`<button class="sound-pic" id="again" aria-label="${word}">${pic}</button>
+      <div class="answers" dir="${T.dir}">${choices.map((L) => `<button class="answer letter-choice" data-letter="${L}">${shown(L)}</button>`).join("")}</div>`);
+    $("again").onclick = () => say(ask);
+    let open = true;
+    document.querySelectorAll(".letter-choice").forEach((button) => {
+      button.onclick = async () => {
+        if (!open) return;
+        if (button.dataset.letter !== target) {
+          wiggle(button);
+          boop();
+          return void say(ask);
+        }
+        open = false;
+        button.classList.add("right");
+        cheer();
+        await say([T.line.startSay(word), { pause: 150 }, target]);
+        await wait(300);
+        if (r !== round) return;
+        await addStar(r);
+        if (r === round) next();
+      };
+    });
+    say(ask);
+  }
+  next();
 }

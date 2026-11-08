@@ -1,4 +1,4 @@
-<title>Star School</title>
+<title>Tara School</title>
 <meta charset="utf-8" />
 <meta
   name="viewport"
@@ -845,7 +845,7 @@
 <div id="scene"></div>
 
 <div id="home">
-  <h1><span class="mascot" id="mascot" aria-hidden="true"></span>Star School</h1>
+  <h1><span class="mascot" id="mascot" aria-hidden="true"></span>Tara School</h1>
   <div class="modes" id="modes">
     <button
       class="mode"
@@ -2007,10 +2007,11 @@
     };
     $("themes").append(card);
   }
-  $("open-settings").onclick = () => {
-    $("home").hidden = true;
-    $("settings").hidden = false;
-  };
+  $("open-settings").onclick = () =>
+    grownUpCheck(() => {
+      $("home").hidden = true;
+      $("settings").hidden = false;
+    });
   $("close-settings").onclick = showHome;
 
   // Language: a global setting. Each voice file loads only when its language is chosen.
