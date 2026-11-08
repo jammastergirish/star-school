@@ -4,66 +4,268 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tara School</title>
+    <meta
+      name="description"
+      content="A spoken learning game for young children: letters, writing, numbers to 100, music and more, in English, French, Spanish, Hindi and Arabic."
+    />
+    <link rel="stylesheet" href="play/fonts.css" />
     <style>
+      :root {
+        --sky: #070a1f;
+        --sky-high: #1a2358;
+        --glow: #ffd166;
+        --moon: #f5f7ff;
+        --dim: #aab3d8;
+        --card: rgba(18, 24, 60, 0.75);
+        --edge: #46528c;
+        --round:
+          "Baloo 2", "Baloo Bhaijaan 2", ui-rounded, "Arial Rounded MT Bold",
+          system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
       body {
-        max-width: 680px;
+        margin: 0;
+        font: 19px/1.55 var(--round);
+        color: var(--moon);
+        background:
+          radial-gradient(120% 70% at 50% 0%, var(--sky-high), var(--sky) 70%)
+            fixed,
+          var(--sky);
+        padding-left: max(20px, env(safe-area-inset-left, 0px));
+        padding-right: max(20px, env(safe-area-inset-right, 0px));
+      }
+      main {
+        max-width: 1040px;
         margin: 0 auto;
-        padding: 32px 20px;
-        font:
-          18px/1.55 -apple-system,
-          system-ui,
-          sans-serif;
-        color: #1d1b2f;
-        background: #fbfaff;
+        padding-block: 56px 40px;
+      }
+      header {
+        text-align: center;
       }
       h1 {
-        font-size: 34px;
-        margin-bottom: 4px;
+        margin: 0;
+        font-size: clamp(52px, 10vw, 104px);
+        line-height: 1;
+        font-weight: 800;
+        color: var(--glow);
+        text-shadow: 0 0 40px rgba(255, 209, 102, 0.45);
       }
-      h2 {
-        font-size: 21px;
-        margin-top: 30px;
+      .meaning {
+        margin: 10px 0 0;
+        color: var(--dim);
+        font-size: 18px;
+      }
+      .lede {
+        max-width: 640px;
+        margin: 22px auto 0;
+        font-size: clamp(20px, 2.6vw, 24px);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 14px;
+        margin-top: 28px;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 26px;
+        font-size: 20px;
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: 999px;
+        border: 3px solid var(--edge);
+        color: var(--moon);
+        background: var(--card);
+      }
+      .button.primary {
+        color: #10142c;
+        background: var(--glow);
+        border-color: var(--glow);
+      }
+      .button.soon {
+        opacity: 0.7;
+        cursor: default;
+      }
+      .shots {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 48px;
+      }
+      .shots img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 18px;
+        border: 3px solid var(--edge);
+        display: block;
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 48px;
+      }
+      .fact {
+        padding: 20px 22px;
+        background: var(--card);
+        border: 2px solid var(--edge);
+        border-radius: 22px;
+      }
+      .fact h2 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        color: var(--glow);
+      }
+      .fact p {
+        margin: 0;
+        color: var(--moon);
+        font-size: 17px;
+        line-height: 1.45;
+      }
+      .games {
+        margin-top: 48px;
+      }
+      .games h2 {
+        font-size: 28px;
+        margin: 0 0 12px;
+        text-align: center;
+      }
+      .games ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+      .games li {
+        padding: 6px 16px;
+        background: var(--card);
+        border: 2px solid var(--edge);
+        border-radius: 999px;
+        font-size: 17px;
+      }
+      footer {
+        margin-top: 56px;
+        text-align: center;
+        color: var(--dim);
+        font-size: 16px;
+      }
+      footer a {
+        color: var(--dim);
+      }
+      a:focus-visible {
+        outline: 3px solid var(--glow);
+        outline-offset: 3px;
+      }
+      @media (max-width: 760px) {
+        .shots,
+        .facts {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
     </style>
   </head>
   <body>
-    <h1>⭐ Tara School</h1>
-    <p>
-      A spoken learning game for young children: letters, tracing, words,
-      counting to 100, drawing, memory, patterns, shapes, sorting, languages and
-      piano. It speaks English, French, Spanish, Hindi and Arabic, and works
-      offline.
-    </p>
+    <main>
+      <header>
+        <h1>⭐ Tara School</h1>
+        <p class="meaning"><em>Tara</em> (तारा) means star in Hindi.</p>
+        <p class="lede">
+          A gentle learning game for young children. Letters, writing, words,
+          numbers to 100 and music, with every instruction spoken, so children
+          who can't read yet can play on their own.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="play/">Play in your browser</a>
+          <span class="button soon" aria-disabled="true"
+            >On the App Store soon</span
+          >
+        </div>
+      </header>
 
-    <h2>Help</h2>
-    <ul>
-      <li>
-        <b>Settings:</b> tap <b>For grown-ups</b> at the bottom of the home
-        screen and answer the sum. There you can set the child's name, the
-        game's language, the languages they are learning, and the theme.
-      </li>
-      <li>
-        <b>How to play:</b> each game explains itself out loud the first time,
-        and again whenever the child taps ❓. Settings also lists how every game
-        works.
-      </li>
-      <li>
-        <b>Saved drawings:</b> open the Files app, then On My iPad, then Tara
-        School, then Drawings.
-      </li>
-      <li>
-        <b>No sound?</b> Check the volume buttons on the side of the iPad.
-      </li>
-    </ul>
+      <div class="shots">
+        <img
+          src="img/01-home.jpg"
+          alt="The home screen, with fourteen games on a night sky with a moon, planets and an astronaut"
+          width="1400"
+          height="1050"
+        />
+        <img
+          src="img/02-starts-with.jpg"
+          alt="Starts with: a picture of a violin above the letters R, V and U"
+          width="1400"
+          height="1050"
+        />
+        <img
+          src="img/08-say-it.jpg"
+          alt="Say it: a cat with its name in English, French, Spanish, Hindi and Arabic, under the sea"
+          width="1400"
+          height="1050"
+        />
+        <img
+          src="img/05-piano.jpg"
+          alt="The piano, with the next key of a song glowing"
+          width="1400"
+          height="1050"
+        />
+      </div>
 
-    <h2>Contact</h2>
-    <p>
-      Report a problem or ask a question on the project's
-      <a href="https://github.com/jammastergirish/star-school/issues"
-        >GitHub page</a
-      >.
-    </p>
+      <div class="facts">
+        <section class="fact">
+          <h2>Five languages</h2>
+          <p>
+            English, French, Spanish, Hindi and Arabic, each spoken by a native
+            voice. Choose the languages your child is learning.
+          </p>
+        </section>
+        <section class="fact">
+          <h2>Made for little ones</h2>
+          <p>
+            No ads, no purchases, no accounts. Mistakes get a gentle hint, never
+            a penalty. Settings sit behind a question for grown-ups.
+          </p>
+        </section>
+        <section class="fact">
+          <h2>Private by design</h2>
+          <p>
+            The app collects nothing and never connects to the internet. Every
+            word it says is recorded inside it.
+          </p>
+        </section>
+      </div>
 
-    <p><a href="privacy.html">Privacy policy</a></p>
+      <section class="games">
+        <h2>Fourteen games</h2>
+        <ul>
+          <li>Find the key</li>
+          <li>Follow the star</li>
+          <li>Type a word</li>
+          <li>Starts with</li>
+          <li>Count to 100</li>
+          <li>Draw</li>
+          <li>Feed the animal</li>
+          <li>Add</li>
+          <li>Find the pairs</li>
+          <li>What's next?</li>
+          <li>Shapes and colours</li>
+          <li>Sort</li>
+          <li>Say it</li>
+          <li>Piano</li>
+        </ul>
+      </section>
+
+      <footer>
+        <a href="support">Support</a> · <a href="privacy">Privacy</a> ·
+        <a href="https://github.com/jammastergirish/star-school"
+          >Source on GitHub</a
+        >
+      </footer>
+    </main>
   </body>
 </html>

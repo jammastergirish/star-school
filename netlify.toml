@@ -1,0 +1,10 @@
+# taraschool.app: the pages in docs/ at the root, and the game itself, the same web/ folder the iPad app bundles, at /play.
+[build]
+  command = "rm -rf site && mkdir -p site/play && cp -R docs/. site/ && cp -R web/. site/play/"
+  publish = "site"
+
+# The voice files are large and only change when they are re-recorded, so browsers keep them for a day.
+[[headers]]
+  for = "/play/voice-*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"

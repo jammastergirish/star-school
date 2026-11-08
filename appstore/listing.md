@@ -13,8 +13,8 @@ Everything to paste into App Store Connect. The character limits are Apple's.
 | Secondary category | Kids (Ages 5 and Under), if you choose the Kids Category |
 | Price | Free |
 | Copyright | 2026 Girish Gupta |
-| Support URL | https://jammastergirish.github.io/star-school/ |
-| Privacy policy URL | https://jammastergirish.github.io/star-school/privacy.html |
+| Support URL | https://taraschool.app/support |
+| Privacy policy URL | https://taraschool.app/privacy |
 
 ## Promotional text (170)
 
