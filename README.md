@@ -2,7 +2,7 @@
 
 Tara means star in Hindi. A learning game for a four-year-old: letters, writing, words, numbers, music and more. Every instruction is spoken, so she doesn't need to read.
 
-It runs in a browser on a Mac, or as an iPad app with finger and Apple Pencil. It works offline, because all the speech is recorded in advance.
+Play it at [taraschool.app](https://taraschool.app/play/). It runs in a browser on a Mac, or as an iPad app with finger and Apple Pencil. It works offline, because all the speech is recorded in advance.
 
 ## Games
 
